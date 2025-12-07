@@ -422,7 +422,7 @@
                         <div class="bg-white p-8 rounded-3xl shadow-xl border border-brand-100">
                              <h2 class="font-serif text-2xl font-bold mb-6 text-brand-900 flex items-center gap-3">
                                 <i data-lucide="list-checks" class="w-6 h-6 text-brand-accent"></i> 
-                                Gestion des produits (${products.length} Tapis)
+                                Gestion des produits
                             </h2>
 
                             <div class="overflow-x-auto">
@@ -503,8 +503,8 @@
                                     <input type="text" placeholder="Ex: 100x150" class="w-full px-4 py-3 bg-brand-50 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-accent focus:outline-none transition-all">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-brand-700 mb-2">Budget envisagé</label>
-                                    <input type="text" placeholder="Ex: 65€" class="w-full px-4 py-3 bg-brand-50 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-accent focus:outline-none transition-all">
+                                    <label class="block text-sm font-medium text-brand-700 mb-2">Budget envisagé (€)</label>
+                                    <input type="text" placeholder="Ex: 65" class="w-full px-4 py-3 bg-brand-50 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-accent focus:outline-none transition-all">
                                 </div>
                             </div>
 
@@ -796,7 +796,7 @@
 
 
         // --- ADMIN TABLE LOGIC ---
-
+        
         function renderAdminTable() {
             const tableBody = document.getElementById('admin-products-table');
             const productListHTML = products.map(product => `
@@ -814,13 +814,15 @@
                     </td>
                     <td class="px-4 py-4 whitespace-nowrap text-sm font-medium">
                         <div class="flex space-x-2">
+                            <!-- Bouton edit visible par défaut -->
                             <button id="edit-btn-${product.id}" onclick="editProduct(${product.id})" class="text-brand-accent hover:text-brand-900 transition-colors p-1 rounded-full hover:bg-brand-100">
                                 <i data-lucide="edit-3" class="w-5 h-5"></i>
                             </button>
+                            <!-- Boutons save et delete cachés par défaut -->
                             <button id="save-btn-${product.id}" onclick="saveProduct(${product.id})" class="text-brand-success hover:text-brand-900 transition-colors p-1 rounded-full hover:bg-brand-100 hidden">
                                 <i data-lucide="save" class="w-5 h-5"></i>
                             </button>
-                            <button onclick="deleteProduct(${product.id})" class="text-brand-danger hover:text-brand-900 transition-colors p-1 rounded-full hover:bg-brand-100">
+                            <button id="delete-btn-${product.id}" onclick="deleteProduct(${product.id})" class="text-brand-danger hover:text-brand-900 transition-colors p-1 rounded-full hover:bg-brand-100 hidden">
                                 <i data-lucide="trash-2" class="w-5 h-5"></i>
                             </button>
                         </div>
@@ -830,69 +832,56 @@
             tableBody.innerHTML = productListHTML;
             lucide.createIcons();
         }
-
+        
         function editProduct(id) {
             // Hide display spans, show input fields
             document.getElementById(`name-display-${id}`).classList.add('hidden');
             document.getElementById(`price-display-${id}`).classList.add('hidden');
             document.getElementById(`name-input-${id}`).classList.remove('hidden');
             document.getElementById(`price-input-${id}`).classList.remove('hidden');
-
+        
             // Toggle buttons
             document.getElementById(`edit-btn-${id}`).classList.add('hidden');
             document.getElementById(`save-btn-${id}`).classList.remove('hidden');
+            document.getElementById(`delete-btn-${id}`).classList.remove('hidden');
         }
-
+        
         function saveProduct(id) {
             const newName = document.getElementById(`name-input-${id}`).value;
             const newPrice = parseFloat(document.getElementById(`price-input-${id}`).value);
-
+        
             if (!newName || isNaN(newPrice) || newPrice <= 0) {
                 showToast("Veuillez entrer un nom et un prix valides.", "error");
                 return;
             }
-
+        
             // Find and update in the products array
             const productIndex = products.findIndex(p => p.id === id);
             if (productIndex !== -1) {
                 products[productIndex].name = newName;
                 products[productIndex].price = newPrice;
             }
-
+        
             // Update display spans immediately
             document.getElementById(`name-display-${id}`).innerText = newName;
             document.getElementById(`price-display-${id}`).innerText = newPrice + '€';
-
+        
             // Hide input fields, show display spans
             document.getElementById(`name-display-${id}`).classList.remove('hidden');
             document.getElementById(`price-display-${id}`).classList.remove('hidden');
             document.getElementById(`name-input-${id}`).classList.add('hidden');
             document.getElementById(`price-input-${id}`).classList.add('hidden');
-
+        
             // Toggle buttons
             document.getElementById(`edit-btn-${id}`).classList.remove('hidden');
             document.getElementById(`save-btn-${id}`).classList.add('hidden');
-
+            document.getElementById(`delete-btn-${id}`).classList.add('hidden');
+        
             // Re-render shop view (in case names/prices changed)
             renderProducts();
             showToast(`Produit ${id} mis à jour.`, "success");
         }
-
-        function deleteProduct(id) {
-            // Remove from the products array
-            products = products.filter(p => p.id !== id);
-            
-            // Re-render both views
-            renderProducts();
-            renderAdminTable(); 
-
-            // Update cart in case deleted item was there (simple version)
-            cart = cart.filter(item => item.id !== id);
-            updateCartUI();
-            
-            showToast(`Produit supprimé du catalogue.`, "error");
-        }
-        
+              
         // --- CART LOGIC ---
 
         function toggleCart() {
