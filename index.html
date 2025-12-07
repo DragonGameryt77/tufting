@@ -797,90 +797,104 @@
 
         // --- ADMIN TABLE LOGIC ---
         
-        function renderAdminTable() {
-            const tableBody = document.getElementById('admin-products-table');
-            const productListHTML = products.map(product => `
-                <tr id="product-row-${product.id}" class="hover:bg-brand-50 transition-colors">
-                    <td class="px-4 py-4 whitespace-nowrap">
-                        <img src="${product.image}" onerror="this.onerror=null; this.src='https://placehold.co/60x60/efece6/4a453e?text=Tapis'" class="w-16 h-16 object-cover rounded-lg border border-brand-100">
-                    </td>
-                    <td class="px-4 py-4">
-                        <span id="name-display-${product.id}" class="text-brand-900 font-medium">${product.name}</span>
-                        <input id="name-input-${product.id}" type="text" value="${product.name}" class="product-editable-input hidden">
-                    </td>
-                    <td class="px-4 py-4 whitespace-nowrap">
-                        <span id="price-display-${product.id}" class="text-brand-800">${product.price}€</span>
-                        <input id="price-input-${product.id}" type="number" value="${product.price}" class="product-editable-input hidden w-20">
-                    </td>
-                    <td class="px-4 py-4 whitespace-nowrap text-sm font-medium">
-                        <div class="flex space-x-2">
-                            <!-- Bouton edit visible par défaut -->
-                            <button id="edit-btn-${product.id}" onclick="editProduct(${product.id})" class="text-brand-accent hover:text-brand-900 transition-colors p-1 rounded-full hover:bg-brand-100">
-                                <i data-lucide="edit-3" class="w-5 h-5"></i>
-                            </button>
-                            <!-- Boutons save et delete cachés par défaut -->
-                            <button id="save-btn-${product.id}" onclick="saveProduct(${product.id})" class="text-brand-success hover:text-brand-900 transition-colors p-1 rounded-full hover:bg-brand-100 hidden">
-                                <i data-lucide="save" class="w-5 h-5"></i>
-                            </button>
-                            <button id="delete-btn-${product.id}" onclick="deleteProduct(${product.id})" class="text-brand-danger hover:text-brand-900 transition-colors p-1 rounded-full hover:bg-brand-100 hidden">
-                                <i data-lucide="trash-2" class="w-5 h-5"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-            tableBody.innerHTML = productListHTML;
-            lucide.createIcons();
-        }
-        
-        function editProduct(id) {
-            // Hide display spans, show input fields
-            document.getElementById(`name-display-${id}`).classList.add('hidden');
-            document.getElementById(`price-display-${id}`).classList.add('hidden');
-            document.getElementById(`name-input-${id}`).classList.remove('hidden');
-            document.getElementById(`price-input-${id}`).classList.remove('hidden');
-        
-            // Toggle buttons
-            document.getElementById(`edit-btn-${id}`).classList.add('hidden');
-            document.getElementById(`save-btn-${id}`).classList.remove('hidden');
-            document.getElementById(`delete-btn-${id}`).classList.remove('hidden');
-        }
-        
-        function saveProduct(id) {
-            const newName = document.getElementById(`name-input-${id}`).value;
-            const newPrice = parseFloat(document.getElementById(`price-input-${id}`).value);
-        
-            if (!newName || isNaN(newPrice) || newPrice <= 0) {
-                showToast("Veuillez entrer un nom et un prix valides.", "error");
-                return;
-            }
-        
-            // Find and update in the products array
-            const productIndex = products.findIndex(p => p.id === id);
-            if (productIndex !== -1) {
-                products[productIndex].name = newName;
-                products[productIndex].price = newPrice;
-            }
-        
-            // Update display spans immediately
-            document.getElementById(`name-display-${id}`).innerText = newName;
-            document.getElementById(`price-display-${id}`).innerText = newPrice + '€';
-        
-            // Hide input fields, show display spans
-            document.getElementById(`name-display-${id}`).classList.remove('hidden');
-            document.getElementById(`price-display-${id}`).classList.remove('hidden');
-            document.getElementById(`name-input-${id}`).classList.add('hidden');
-            document.getElementById(`price-input-${id}`).classList.add('hidden');
-        
-            // Toggle buttons
-            document.getElementById(`edit-btn-${id}`).classList.remove('hidden');
-            document.getElementById(`save-btn-${id}`).classList.add('hidden');
-            document.getElementById(`delete-btn-${id}`).classList.add('hidden');
-        
-            // Re-render shop view (in case names/prices changed)
-            renderProducts();
-            showToast(`Produit ${id} mis à jour.`, "success");
-        }
+        // --- ADMIN TABLE LOGIC ---
+
+function renderAdminTable() {
+    const tableBody = document.getElementById('admin-products-table');
+    const productListHTML = products.map(product => `
+        <tr id="product-row-${product.id}" class="hover:bg-brand-50 transition-colors">
+            <td class="px-4 py-4 whitespace-nowrap">
+                <img src="${product.image}" onerror="this.onerror=null; this.src='https://placehold.co/60x60/efece6/4a453e?text=Tapis'" class="w-16 h-16 object-cover rounded-lg border border-brand-100">
+            </td>
+            <td class="px-4 py-4">
+                <span id="name-display-${product.id}" class="text-brand-900 font-medium">${product.name}</span>
+                <input id="name-input-${product.id}" type="text" value="${product.name}" class="product-editable-input hidden">
+            </td>
+            <td class="px-4 py-4 whitespace-nowrap">
+                <span id="price-display-${product.id}" class="text-brand-800">${product.price}€</span>
+                <input id="price-input-${product.id}" type="number" value="${product.price}" class="product-editable-input hidden w-20">
+            </td>
+            <td class="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                <div class="flex space-x-2">
+                    <button id="edit-btn-${product.id}" onclick="editProduct(${product.id})" class="text-brand-accent hover:text-brand-900 transition-colors p-1 rounded-full hover:bg-brand-100">
+                        <i data-lucide="edit-3" class="w-5 h-5"></i>
+                    </button>
+                    <button id="save-btn-${product.id}" onclick="saveProduct(${product.id})" class="text-brand-success hover:text-brand-900 transition-colors p-1 rounded-full hover:bg-brand-100 hidden">
+                        <i data-lucide="save" class="w-5 h-5"></i>
+                    </button>
+                    <button onclick="deleteProduct(${product.id})" class="text-brand-danger hover:text-brand-900 transition-colors p-1 rounded-full hover:bg-brand-100">
+                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+    tableBody.innerHTML = productListHTML;
+    lucide.createIcons();
+}
+
+function editProduct(id) {
+    // Hide display spans, show input fields
+    document.getElementById(`name-display-${id}`).classList.add('hidden');
+    document.getElementById(`price-display-${id}`).classList.add('hidden');
+    document.getElementById(`name-input-${id}`).classList.remove('hidden');
+    document.getElementById(`price-input-${id}`).classList.remove('hidden');
+
+    // Toggle buttons
+    document.getElementById(`edit-btn-${id}`).classList.add('hidden');
+    document.getElementById(`save-btn-${id}`).classList.remove('hidden');
+}
+
+function saveProduct(id) {
+    const newName = document.getElementById(`name-input-${id}`).value;
+    const newPrice = parseFloat(document.getElementById(`price-input-${id}`).value);
+
+    if (!newName || isNaN(newPrice) || newPrice <= 0) {
+        showToast("Veuillez entrer un nom et un prix valides.", "error");
+        return;
+    }
+
+    // Find and update in the products array
+    const productIndex = products.findIndex(p => p.id === id);
+    if (productIndex !== -1) {
+        products[productIndex].name = newName;
+        products[productIndex].price = newPrice;
+    }
+
+    // Update display spans immediately
+    document.getElementById(`name-display-${id}`).innerText = newName;
+    document.getElementById(`price-display-${id}`).innerText = newPrice + '€';
+
+    // Hide input fields, show display spans
+    document.getElementById(`name-display-${id}`).classList.remove('hidden');
+    document.getElementById(`price-display-${id}`).classList.remove('hidden');
+    document.getElementById(`name-input-${id}`).classList.add('hidden');
+    document.getElementById(`price-input-${id}`).classList.add('hidden');
+
+    // Toggle buttons
+    document.getElementById(`edit-btn-${id}`).classList.remove('hidden');
+    document.getElementById(`save-btn-${id}`).classList.add('hidden');
+
+    // Re-render shop view (in case names/prices changed)
+    renderProducts();
+    showToast(`Produit ${id} mis à jour.`, "success");
+}
+
+function deleteProduct(id) {
+    // Remove from the products array
+    products = products.filter(p => p.id !== id);
+    
+    // Re-render both views
+    renderProducts();
+    renderAdminTable(); 
+
+    // Update cart in case deleted item was there (simple version)
+    cart = cart.filter(item => item.id !== id);
+    updateCartUI();
+    
+    showToast(`Produit supprimé du catalogue.`, "error");
+}
+
               
         // --- CART LOGIC ---
 
