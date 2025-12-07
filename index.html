@@ -1,0 +1,969 @@
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aymée Tufting | Tapis Artisanaux</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Icons (Lucide) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f9f8f6',  // Fond très clair (off-white)
+                            100: '#efece6', // Gris/Beige doux
+                            200: '#e6e0d6', // Input backgrounds
+                            300: '#dcd6ce', // Bordures
+                            500: '#a69d92', // Texte secondaire
+                            800: '#4a453e', // Texte principal
+                            900: '#2c2925', // Noir doux
+                            accent: '#d97757', // Terracotta doux
+                            success: '#5f8d4e', // Vert doux
+                            danger: '#dc2626' // Rouge pour suppression
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Styles pour masquer/afficher les pages (SPA simple) */
+        .page-section {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .page-section.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Effet de texture sur le fond */
+        body {
+            background-color: #f9f8f6;
+            background-image: radial-gradient(#dcd6ce 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        /* Scrollbar masquée pour le design épuré */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Style pour le mode édition dans le tableau */
+        .product-editable-input {
+            border: 1px solid #d97757;
+            padding: 4px;
+            border-radius: 4px;
+            background-color: #fff;
+            box-shadow: 0 0 5px rgba(217, 119, 87, 0.3);
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="text-brand-800 font-sans antialiased selection:bg-brand-accent selection:text-white">
+
+    <!-- NAVIGATION (HEADER) -->
+    <nav class="fixed top-0 w-full z-50 bg-brand-50/90 backdrop-blur-md border-b border-brand-300 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                
+                <!-- Logo & Menu Trigger -->
+                <button onclick="navigateTo('home')" class="group flex items-center gap-3 focus:outline-none">
+                    <div class="relative w-10 h-10 bg-brand-900 text-white flex items-center justify-center rounded-full overflow-hidden group-hover:bg-brand-accent transition-colors">
+                        <span class="font-serif font-bold text-xl">A</span>
+                    </div>
+                    <div class="flex flex-col items-start">
+                        <span class="font-serif text-xl font-semibold tracking-wide group-hover:text-brand-accent transition-colors">Aymée Tufting</span>
+                        <span class="text-xs text-brand-500 uppercase tracking-widest hidden sm:block">Atelier Créatif</span>
+                    </div>
+                </button>
+
+                <!-- Desktop Nav & Actions -->
+                <div class="flex items-center gap-4 md:gap-6">
+                    <button onclick="navigateTo('shop')" class="hidden md:block text-sm font-medium hover:text-brand-accent transition-colors">Tous les tapis</button>
+                    <button onclick="navigateTo('custom')" class="hidden md:block px-5 py-2.5 bg-brand-900 text-white text-sm rounded-full hover:bg-brand-accent transition-colors shadow-lg shadow-brand-900/10">
+                        Tapis Personnalisé
+                    </button>
+                    
+                    <!-- Account Icon (New) -->
+                    <button onclick="handleAccountClick()" class="p-2 hover:bg-brand-100 rounded-full transition-colors relative group">
+                        <i data-lucide="user" class="w-6 h-6"></i>
+                        <span id="admin-indicator" class="hidden absolute top-0 right-0 w-3 h-3 bg-brand-success rounded-full border-2 border-brand-50"></span>
+                    </button>
+
+                    <!-- Cart Icon -->
+                    <button onclick="toggleCart()" class="relative p-2 hover:bg-brand-100 rounded-full transition-colors">
+                        <i data-lucide="shopping-bag" class="w-6 h-6"></i>
+                        <span id="cart-count" class="absolute top-0 right-0 w-4 h-4 bg-brand-accent text-white text-[10px] flex items-center justify-center rounded-full opacity-0 transition-opacity">0</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- SIDEBAR MENU (Overlay) -->
+    <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-brand-900/20 backdrop-blur-sm z-40 hidden transition-opacity opacity-0"></div>
+    <aside id="sidebar" class="fixed top-0 left-0 h-full w-80 bg-brand-50 z-50 transform -translate-x-full transition-transform duration-500 shadow-2xl flex flex-col justify-between border-r border-brand-300">
+        <div class="p-8">
+            <div class="flex justify-between items-center mb-12">
+                <span class="font-serif text-2xl font-bold">Menu</span>
+                <button onclick="toggleSidebar()" class="p-2 hover:bg-brand-100 rounded-full"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            <ul class="space-y-6">
+                <li><button onclick="navigateTo('home'); toggleSidebar()" class="text-2xl font-serif hover:text-brand-accent transition-colors w-full text-left">Accueil</button></li>
+                <li><button onclick="navigateTo('shop'); toggleSidebar()" class="text-2xl font-serif hover:text-brand-accent transition-colors w-full text-left">La Collection</button></li>
+                <li><button onclick="navigateTo('custom'); toggleSidebar()" class="text-2xl font-serif hover:text-brand-accent transition-colors w-full text-left">Sur Mesure</button></li>
+                
+                <!-- Admin Link (Hidden by default) -->
+                <li id="nav-admin-link" class="hidden">
+                    <button onclick="navigateTo('admin'); toggleSidebar()" class="text-2xl font-serif text-brand-accent transition-colors w-full text-left flex items-center gap-2">
+                        <i data-lucide="lock" class="w-5 h-5"></i> Admin
+                    </button>
+                </li>
+                
+                <li><button onclick="toggleSidebar()" class="text-lg font-serif hover:text-brand-accent transition-colors w-full text-left text-brand-500 mt-4">L'Atelier (À propos)</button></li>
+            </ul>
+        </div>
+        <div class="p-8 border-t border-brand-300">
+            <div id="auth-status" class="mb-6">
+                <button onclick="navigateTo('login'); toggleSidebar()" class="text-sm underline text-brand-500 hover:text-brand-900">Se connecter</button>
+            </div>
+            <div class="flex gap-4">
+                <i data-lucide="instagram" class="w-5 h-5 cursor-pointer hover:text-brand-accent"></i>
+                <i data-lucide="facebook" class="w-5 h-5 cursor-pointer hover:text-brand-accent"></i>
+                <i data-lucide="mail" class="w-5 h-5 cursor-pointer hover:text-brand-accent"></i>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="pt-20 min-h-screen relative">
+        
+        <!-- PAGE: ACCUEIL (HOME) -->
+        <div id="home" class="page-section active">
+            <!-- Hero Section -->
+            <section class="relative h-[85vh] w-full overflow-hidden flex items-center justify-center">
+                <div class="absolute inset-0 z-0">
+                    <img src="https://images.unsplash.com/photo-1596236681023-e18e3d551922?q=80&w=2574&auto=format&fit=crop" onerror="this.onerror=null; this.src='https://placehold.co/1920x1080/4a453e/f9f8f6?text=Aymee+Tufting';" alt="Atelier Tufting" class="w-full h-full object-cover opacity-90">
+                    <div class="absolute inset-0 bg-gradient-to-b from-brand-50/30 to-brand-50/10"></div>
+                </div>
+                <div class="relative z-10 text-center px-4 max-w-4xl mx-auto mt-20">
+                    <span class="inline-block py-1 px-3 border border-brand-800 rounded-full text-xs font-bold tracking-widest uppercase mb-6 bg-white/50 backdrop-blur-sm">Fait Main en France</span>
+                    <h1 class="text-5xl md:text-7xl font-serif font-medium mb-6 text-brand-900 leading-tight">L'art du <span class="italic text-brand-accent">Tufting</span><br>réinventé.</h1>
+                    <p class="text-lg md:text-xl text-brand-800 mb-10 max-w-2xl mx-auto font-light">
+                        Des pièces uniques, douces et texturées pour transformer votre intérieur.
+                        Chaque tapis est une œuvre d'art tuftée à la main dans notre atelier.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <button onclick="navigateTo('shop')" class="px-8 py-4 bg-brand-900 text-white rounded-full hover:bg-brand-accent transition-colors shadow-xl">Découvrir la collection</button>
+                        <button onclick="navigateTo('custom')" class="px-8 py-4 bg-white text-brand-900 border border-brand-300 rounded-full hover:bg-brand-50 transition-colors">Créer mon tapis</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Brand Section -->
+            <section class="py-24 px-4 bg-white">
+                <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                    <div class="relative">
+                        <div class="absolute -top-4 -left-4 w-full h-full border-2 border-brand-accent rounded-2xl z-0"></div>
+                        <img src="https://images.unsplash.com/photo-1615529182904-14819c35db37?q=80&w=1780&auto=format&fit=crop" onerror="this.onerror=null; this.src='https://placehold.co/800x500/a69d92/f9f8f6?text=Atelier';" class="relative z-10 rounded-2xl shadow-lg w-full h-[500px] object-cover" alt="Tufting process">
+                    </div>
+                    <div>
+                        <h2 class="text-4xl font-serif mb-6 text-brand-900">L'Atelier Aymée</h2>
+                        <div class="w-20 h-1 bg-brand-accent mb-8"></div>
+                        <p class="text-brand-500 mb-6 leading-relaxed">
+                            Aymée Tufting est né d'une passion pour les matières et les couleurs. Dans notre petit atelier, nous repoussons les limites du tufting traditionnel pour créer des formes organiques et des textures inattendues.
+                        </p>
+                        <p class="text-brand-500 mb-8 leading-relaxed">
+                            Nous utilisons exclusivement de la laine de Nouvelle-Zélande pour sa douceur incomparable et sa durabilité. Chaque pièce demande entre 10 et 30 heures de travail minutieux.
+                        </p>
+                        <div class="grid grid-cols-3 gap-4 border-t border-brand-100 pt-8">
+                            <div class="text-center">
+                                <i data-lucide="sparkles" class="w-8 h-8 mx-auto mb-2 text-brand-accent"></i>
+                                <span class="text-xs uppercase tracking-wider font-bold">Unique</span>
+                            </div>
+                            <div class="text-center">
+                                <i data-lucide="heart-handshake" class="w-8 h-8 mx-auto mb-2 text-brand-accent"></i>
+                                <span class="text-xs uppercase tracking-wider font-bold">Artisanal</span>
+                            </div>
+                            <div class="text-center">
+                                <i data-lucide="leaf" class="w-8 h-8 mx-auto mb-2 text-brand-accent"></i>
+                                <span class="text-xs uppercase tracking-wider font-bold">Eco-responsable</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- PAGE: TOUS LES TAPIS (SHOP) -->
+        <div id="shop" class="page-section">
+            <div class="bg-brand-100 py-16 px-4">
+                <div class="max-w-7xl mx-auto text-center">
+                    <h1 class="text-5xl font-serif mb-4">La Collection</h1>
+                    <p class="text-brand-500 max-w-2xl mx-auto">Explorez toutes nos créations disponibles. Chaque pièce est unique.</p>
+                </div>
+            </div>
+
+            <div class="max-w-7xl mx-auto px-4 py-12 flex flex-col md:flex-row gap-8">
+                <!-- Filters Sidebar -->
+                <div class="w-full md:w-64 flex-shrink-0">
+                    <div class="sticky top-24">
+                        <div class="flex justify-between items-center md:block mb-4">
+                            <h3 class="font-serif text-xl font-bold mb-4">Filtres</h3>
+                            <button class="md:hidden text-sm underline">Tout effacer</button>
+                        </div>
+                        
+                        <div class="space-y-6">
+                            <!-- Filtre Prix -->
+                            <div>
+                                <h4 class="font-medium mb-2 text-sm uppercase tracking-wide text-brand-500">Prix</h4>
+                                <input type="range" class="w-full accent-brand-accent">
+                                <div class="flex justify-between text-xs text-brand-500 mt-1">
+                                    <span>50€</span>
+                                    <span>500€</span>
+                                </div>
+                            </div>
+
+                            <!-- Filtre Type -->
+                            <div>
+                                <h4 class="font-medium mb-2 text-sm uppercase tracking-wide text-brand-500">Type</h4>
+                                <div class="flex flex-col gap-2 text-sm text-brand-800">
+                                    <label class="flex items-center gap-2 cursor-pointer hover:text-brand-accent transition-colors">
+                                        <input type="checkbox" class="accent-brand-accent rounded border-gray-300"> 
+                                        <span>Décoration Murale</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer hover:text-brand-accent transition-colors">
+                                        <input type="checkbox" class="accent-brand-accent rounded border-gray-300"> 
+                                        <span>Tapis de Sol</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Filtre Taille -->
+                             <div>
+                                <h4 class="font-medium mb-2 text-sm uppercase tracking-wide text-brand-500">Taille</h4>
+                                <div class="flex flex-col gap-2 text-sm text-brand-800">
+                                    <label class="flex items-center gap-2 cursor-pointer hover:text-brand-accent transition-colors">
+                                        <input type="checkbox" class="accent-brand-accent rounded border-gray-300"> 
+                                        <span>Petit (Mug Rug / Miroir)</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer hover:text-brand-accent transition-colors">
+                                        <input type="checkbox" class="accent-brand-accent rounded border-gray-300"> 
+                                        <span>Moyen (Descente de lit)</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer hover:text-brand-accent transition-colors">
+                                        <input type="checkbox" class="accent-brand-accent rounded border-gray-300"> 
+                                        <span>Grand (Salon)</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Grid (Dynamic) -->
+                <div class="flex-1">
+                    <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                         <!-- Products will be injected here by JS -->
+                    </div>
+                    
+                    <!-- Pagination mock -->
+                    <div class="flex justify-center mt-12 gap-2">
+                        <button class="w-10 h-10 rounded-full bg-brand-900 text-white flex items-center justify-center">1</button>
+                        <button class="w-10 h-10 rounded-full hover:bg-brand-200 text-brand-900 flex items-center justify-center transition-colors">2</button>
+                        <button class="w-10 h-10 rounded-full hover:bg-brand-200 text-brand-900 flex items-center justify-center transition-colors">3</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE: LOGIN -->
+        <div id="login" class="page-section">
+            <div class="min-h-[80vh] flex items-center justify-center px-4 py-12">
+                <div class="bg-white p-10 rounded-3xl shadow-xl border border-brand-100 max-w-md w-full">
+                    <div class="text-center mb-8">
+                        <h2 class="font-serif text-3xl font-bold mb-2">Bon retour</h2>
+                        <p class="text-brand-500">Connectez-vous à votre compte Aymée.</p>
+                    </div>
+                    
+                    <!-- Alert Message Area -->
+                    <div id="login-message" class="hidden p-3 mb-4 rounded-lg text-sm bg-red-100 text-red-800 border border-red-200"></div>
+
+                    <form onsubmit="handleLogin(event)" class="space-y-6">
+                        <div>
+                            <label for="username" class="block text-sm font-medium text-brand-700 mb-2">Identifiant</label>
+                            <input type="text" id="username" class="w-full px-4 py-3 bg-brand-50 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-accent focus:outline-none transition-all" required>
+                        </div>
+                        <div>
+                            <label for="password" class="block text-sm font-medium text-brand-700 mb-2">Mot de passe</label>
+                            <input type="password" id="password" class="w-full px-4 py-3 bg-brand-50 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-accent focus:outline-none transition-all" required>
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-sm">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" class="accent-brand-accent"> Se souvenir
+                            </label>
+                            <a href="#" class="text-brand-accent hover:underline">Mot de passe oublié ?</a>
+                        </div>
+
+                        <button type="submit" class="w-full py-4 bg-brand-900 text-white rounded-xl font-medium hover:bg-brand-accent transition-colors shadow-lg">Se connecter</button>
+                    </form>
+                    
+                    <div class="mt-8 text-center text-sm text-brand-500">
+                        Pas encore de compte ? <a href="#" class="text-brand-900 font-medium underline">Créer un compte</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE: ADMIN DASHBOARD -->
+        <div id="admin" class="page-section">
+            <div class="bg-brand-900 text-white py-12 px-4">
+                <div class="max-w-7xl mx-auto flex justify-between items-center">
+                    <div>
+                        <h1 class="text-4xl font-serif mb-2">Panel Admin</h1>
+                        <p class="text-brand-300">Gérez votre catalogue et vos commandes.</p>
+                    </div>
+                    <button onclick="handleLogout()" class="px-6 py-2 border border-brand-500 rounded-full hover:bg-white hover:text-brand-900 transition-colors">Déconnexion</button>
+                </div>
+            </div>
+
+            <div class="max-w-7xl mx-auto px-4 py-12">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <!-- Sidebar Admin / Stats -->
+                    <div class="col-span-1 space-y-8">
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-brand-100">
+                            <h3 class="font-serif text-lg mb-4 flex items-center gap-2"><i data-lucide="bar-chart-3" class="w-5 h-5 text-brand-accent"></i> Statistiques Rapides</h3>
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center pb-2 border-b border-brand-50">
+                                    <span class="text-brand-500">Ventes du mois</span>
+                                    <span class="font-bold text-brand-900">1,240€</span>
+                                </div>
+                                <div class="flex justify-between items-center pb-2 border-b border-brand-50">
+                                    <span class="text-brand-500">Visiteurs</span>
+                                    <span class="font-bold text-brand-900">854</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-brand-500">Commandes en cours</span>
+                                    <span class="font-bold text-brand-accent">3</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Add Product Form -->
+                        <div class="bg-white p-6 rounded-3xl shadow-xl border border-brand-100">
+                            <h2 class="font-serif text-xl font-bold mb-4 text-brand-900 flex items-center gap-2">
+                                <i data-lucide="package-plus" class="w-5 h-5 text-brand-accent"></i> 
+                                Ajouter un nouveau
+                            </h2>
+                            <form onsubmit="handleAddProduct(event)" class="space-y-4">
+                                <div>
+                                    <input type="text" id="prod-name" class="w-full px-3 py-2 bg-brand-50 border border-brand-200 rounded-lg focus:ring-1 focus:ring-brand-accent focus:outline-none text-sm" placeholder="Nom du tapis" required>
+                                </div>
+                                <div>
+                                    <input type="number" id="prod-price" class="w-full px-3 py-2 bg-brand-50 border border-brand-200 rounded-lg focus:ring-1 focus:ring-brand-accent focus:outline-none text-sm" placeholder="Prix (€)" required>
+                                </div>
+                                <div>
+                                    <input type="url" id="prod-image" class="w-full px-3 py-2 bg-brand-50 border border-brand-200 rounded-lg focus:ring-1 focus:ring-brand-accent focus:outline-none text-sm" placeholder="URL de l'image (Ex: https://...)" value="https://images.unsplash.com/photo-1620735692151-26a7e0748429?q=80&w=200&auto=format&fit=crop">
+                                </div>
+                                <button type="submit" class="w-full py-3 bg-brand-accent text-white rounded-xl font-medium hover:bg-brand-success transition-colors text-sm">
+                                    Publier le produit
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Product Management Table -->
+                    <div class="col-span-1 md:col-span-2">
+                        <div class="bg-white p-8 rounded-3xl shadow-xl border border-brand-100">
+                             <h2 class="font-serif text-2xl font-bold mb-6 text-brand-900 flex items-center gap-3">
+                                <i data-lucide="list-checks" class="w-6 h-6 text-brand-accent"></i> 
+                                Gestion des produits (${products.length} Tapis)
+                            </h2>
+
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-brand-200">
+                                    <thead class="bg-brand-50">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-brand-500 uppercase tracking-wider">Image</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-brand-500 uppercase tracking-wider">Nom</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-brand-500 uppercase tracking-wider">Prix</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-brand-500 uppercase tracking-wider">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admin-products-table" class="bg-white divide-y divide-brand-100">
+                                        <!-- Products rows will be injected here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE: SUR MESURE (CUSTOM) -->
+        <div id="custom" class="page-section">
+            <div class="max-w-7xl mx-auto px-4 py-16">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                    <div>
+                        <span class="text-brand-accent font-bold tracking-widest text-xs uppercase mb-2 block">L'Atelier des Rêves</span>
+                        <h1 class="text-5xl font-serif mb-6 leading-tight">Créez votre pièce unique.</h1>
+                        <p class="text-lg text-brand-500 mb-8">
+                            Vous avez un design en tête ? Une palette de couleurs spécifique pour votre salon ? 
+                            Remplissez ce formulaire pour démarrer la co-création de votre tapis Aymée.
+                        </p>
+                        
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-brand-100 mb-8">
+                            <h3 class="font-serif text-xl mb-4">Comment ça marche ?</h3>
+                            <ul class="space-y-4">
+                                <li class="flex gap-4">
+                                    <div class="w-8 h-8 rounded-full bg-brand-100 text-brand-900 flex items-center justify-center font-serif font-bold flex-shrink-0">1</div>
+                                    <p class="text-sm text-brand-600">Décrivez votre projet et envoyez vos inspirations.</p>
+                                </li>
+                                <li class="flex gap-4">
+                                    <div class="w-8 h-8 rounded-full bg-brand-100 text-brand-900 flex items-center justify-center font-serif font-bold flex-shrink-0">2</div>
+                                    <p class="text-sm text-brand-600">Je vous envoie un croquis et un devis sous 48h.</p>
+                                </li>
+                                <li class="flex gap-4">
+                                    <div class="w-8 h-8 rounded-full bg-brand-100 text-brand-900 flex items-center justify-center font-serif font-bold flex-shrink-0">3</div>
+                                    <p class="text-sm text-brand-600">Validation, acompte, et le tufting commence !</p>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <img src="https://images.unsplash.com/photo-1620735692151-26a7e0748429?q=80&w=1887&auto=format&fit=crop" onerror="this.onerror=null; this.src='https://placehold.co/800x400/a69d92/f9f8f6?text=Laines';" class="rounded-2xl w-full h-64 object-cover" alt="Laine colors">
+                    </div>
+
+                    <div class="bg-white p-8 rounded-3xl shadow-xl border border-brand-100">
+                        <form class="space-y-6" onsubmit="event.preventDefault(); showToast('Demande de tapis personnalisé envoyée !', 'success');">
+                            <div class="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-brand-700 mb-2">Prénom</label>
+                                    <input type="text" class="w-full px-4 py-3 bg-brand-50 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-accent focus:outline-none transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-brand-700 mb-2">Nom</label>
+                                    <input type="text" class="w-full px-4 py-3 bg-brand-50 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-accent focus:outline-none transition-all">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-brand-700 mb-2">Email</label>
+                                <input type="email" class="w-full px-4 py-3 bg-brand-50 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-accent focus:outline-none transition-all">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-brand-700 mb-2">Dimensions approx. (cm)</label>
+                                    <input type="text" placeholder="Ex: 100x150" class="w-full px-4 py-3 bg-brand-50 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-accent focus:outline-none transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-brand-700 mb-2">Budget envisagé</label>
+                                    <select class="w-full px-4 py-3 bg-brand-50 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-accent focus:outline-none transition-all">
+                                        <option>Moins de 100€</option>
+                                        <option>100€ - 300€</option>
+                                        <option>300€ - 600€</option>
+                                        <option>+ 600€</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-brand-700 mb-2">Description du projet</label>
+                                <textarea rows="4" placeholder="Couleurs, formes, ambiance..." class="w-full px-4 py-3 bg-brand-50 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-accent focus:outline-none transition-all"></textarea>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-brand-700 mb-2">Inspirations (Image)</label>
+                                <div class="border-2 border-dashed border-brand-300 rounded-lg p-8 text-center hover:bg-brand-50 transition-colors cursor-pointer">
+                                    <i data-lucide="upload-cloud" class="w-8 h-8 mx-auto text-brand-400 mb-2"></i>
+                                    <p class="text-sm text-brand-500">Cliquez pour ajouter un fichier</p>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="w-full py-4 bg-brand-900 text-white rounded-xl font-medium hover:bg-brand-accent transition-colors shadow-lg">Envoyer ma demande</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-brand-900 text-brand-100 py-16">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-12">
+            <div>
+                <span class="font-serif text-2xl font-bold text-white mb-6 block">Aymée.</span>
+                <p class="text-brand-300 text-sm leading-relaxed">
+                    Atelier de tufting artisanal basé en France. Nous créons des tapis modernes et texturés pour les intérieurs qui ont une âme.
+                </p>
+            </div>
+            <div>
+                <h4 class="text-white font-medium mb-4">Boutique</h4>
+                <ul class="space-y-2 text-sm text-brand-300">
+                    <li><button onclick="navigateTo('shop')" class="hover:text-white transition-colors">Tous les tapis</button></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Nouveautés</a></li>
+                    <li><button onclick="navigateTo('custom')" class="hover:text-white transition-colors">Sur Mesure</button></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Cartes Cadeaux</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-medium mb-4">Aide</h4>
+                <ul class="space-y-2 text-sm text-brand-300">
+                    <li><a href="#" class="hover:text-white transition-colors">Livraison & Retours</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Entretien des tapis</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">FAQ</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Contact</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-medium mb-4">Newsletter</h4>
+                <p class="text-xs text-brand-300 mb-4">Inscrivez-vous pour suivre les sorties de l'atelier.</p>
+                <div class="flex">
+                    <input type="email" placeholder="Votre email" class="bg-brand-800 border-none text-white text-sm px-4 py-2 rounded-l-lg focus:ring-1 focus:ring-brand-accent w-full">
+                    <button class="bg-brand-accent text-white px-4 py-2 rounded-r-lg hover:bg-white hover:text-brand-accent transition-colors">OK</button>
+                </div>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 mt-16 pt-8 border-t border-brand-800 text-center text-xs text-brand-500">
+            &copy; 2023 Aymée Tufting. Tous droits réservés. Design fictif pour démo.
+        </div>
+    </footer>
+
+    <!-- CART MODAL (Slide-over) -->
+    <div id="cart-overlay" onclick="toggleCart()" class="fixed inset-0 bg-brand-900/40 backdrop-blur-sm z-50 hidden transition-opacity opacity-0"></div>
+    <div id="cart-panel" class="fixed top-0 right-0 h-full w-full max-w-md bg-white z-[60] transform translate-x-full transition-transform duration-500 shadow-2xl flex flex-col">
+        <div class="p-6 border-b border-brand-100 flex justify-between items-center bg-brand-50">
+            <h2 class="font-serif text-xl font-bold">Votre Panier</h2>
+            <button onclick="toggleCart()" class="p-2 hover:bg-brand-200 rounded-full transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        
+        <!-- Cart Items Area -->
+        <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-6">
+            <!-- Empty state default -->
+            <div class="h-full flex flex-col items-center justify-center text-brand-400">
+                <i data-lucide="shopping-basket" class="w-16 h-16 mb-4 opacity-50"></i>
+                <p>Votre panier est vide</p>
+                <button onclick="toggleCart(); navigateTo('shop')" class="mt-4 text-brand-accent underline hover:text-brand-900">Explorer la boutique</button>
+            </div>
+        </div>
+
+        <!-- Footer Cart -->
+        <div class="p-6 border-t border-brand-100 bg-brand-50">
+            <div class="flex justify-between items-center mb-4 text-lg font-bold text-brand-900">
+                <span>Total</span>
+                <span id="cart-total">0€</span>
+            </div>
+            <button class="w-full py-4 bg-brand-900 text-white rounded-xl hover:bg-brand-accent transition-colors shadow-lg">Commander</button>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-brand-900 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 transition-all duration-300 translate-y-20 opacity-0 z-[70]">
+        <i id="toast-icon" data-lucide="check-circle" class="w-5 h-5 text-brand-accent"></i>
+        <span id="toast-message"></span>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // Init Icons
+        lucide.createIcons();
+
+        // --- GLOBAL STATE ---
+        let isAdmin = false;
+        
+        let products = [
+            { id: 1, name: "Le Sunset", price: 190, category: 'Tapis de Sol', image: "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=1770&auto=format&fit=crop" },
+            { id: 2, name: "Mousse Verte", price: 210, category: 'Décoration Murale', image: "https://images.unsplash.com/photo-1558051815-09eb99532f23?q=80&w=1770&auto=format&fit=crop" },
+            { id: 3, name: "Le Smile", price: 95, category: 'Accessoire', image: "https://images.unsplash.com/photo-1617362078672-4d227b2e2d63?q=80&w=1770&auto=format&fit=crop" },
+            { id: 4, name: "L'Organique", price: 250, category: 'Tapis de Sol', image: "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?q=80&w=1770&auto=format&fit=crop" },
+            { id: 5, name: "Lignes Pures", price: 175, category: 'Tapis de Sol', image: "https://images.unsplash.com/photo-1600607686527-6fb886090705?q=80&w=2727&auto=format&fit=crop" },
+            { id: 6, name: "Yin Yang", price: 130, category: 'Décoration Murale', image: "https://images.unsplash.com/photo-1628143990812-7065963f274a?q=80&w=1770&auto=format&fit=crop" }
+        ];
+
+        let cart = [];
+
+        // --- NAVIGATION & UTILS ---
+
+        function navigateTo(pageId) {
+            // Guardrail for Admin page
+            if (pageId === 'admin' && !isAdmin) {
+                showToast("Accès refusé. Veuillez vous connecter en tant qu'administrateur.", "error");
+                navigateTo('login');
+                return;
+            }
+
+            document.querySelectorAll('.page-section').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.getElementById(pageId).classList.add('active');
+            window.scrollTo(0, 0);
+
+            // Re-render admin table when navigating to admin
+            if (pageId === 'admin') {
+                renderAdminTable();
+            }
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            const isOpen = !sidebar.classList.contains('-translate-x-full');
+
+            if (isOpen) {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.remove('opacity-100');
+                overlay.classList.add('opacity-0');
+                setTimeout(() => overlay.classList.add('hidden'), 300);
+            } else {
+                overlay.classList.remove('hidden');
+                void overlay.offsetWidth;
+                overlay.classList.remove('opacity-0');
+                overlay.classList.add('opacity-100');
+                sidebar.classList.remove('-translate-x-full');
+            }
+        }
+
+        function showToast(message, type = 'default') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastMsg.innerText = message;
+            
+            // Set icon and color based on type
+            let iconName = 'check-circle';
+            let iconClass = 'text-brand-accent';
+
+            if (type === 'error') {
+                iconName = 'alert-triangle';
+                iconClass = 'text-red-500';
+            } else if (type === 'success') {
+                iconName = 'check-circle';
+                iconClass = 'text-brand-success';
+            }
+
+            toastIcon.setAttribute('class', `w-5 h-5 ${iconClass}`);
+            toastIcon.setAttribute('data-lucide', iconName);
+            lucide.createIcons();
+            
+            // Show toast
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                // Hide toast
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // --- AUTH & ADMIN LOGIC ---
+
+        function handleAccountClick() {
+            if (isAdmin) {
+                navigateTo('admin');
+            } else {
+                navigateTo('login');
+            }
+        }
+
+        function setLoginMessage(message, isError = false) {
+            const el = document.getElementById('login-message');
+            el.innerText = message;
+            el.classList.remove('hidden', 'bg-red-100', 'text-red-800', 'border-red-200', 'bg-green-100', 'text-green-800', 'border-green-200');
+            if (isError) {
+                el.classList.add('bg-red-100', 'text-red-800', 'border-red-200');
+            } else {
+                el.classList.add('bg-green-100', 'text-green-800', 'border-green-200');
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+
+            document.getElementById('login-message').classList.add('hidden'); // Clear previous message
+
+            if (user === 'admin' && pass === 'admin') {
+                isAdmin = true;
+                setLoginMessage("Connexion réussie ! Bienvenue Aymée.", false);
+                
+                // Update UI for Admin
+                document.getElementById('nav-admin-link').classList.remove('hidden');
+                document.getElementById('admin-indicator').classList.remove('hidden');
+                document.getElementById('auth-status').innerHTML = '<span class="text-sm font-bold text-brand-accent">Compte Admin actif</span>';
+                
+                setTimeout(() => navigateTo('admin'), 800);
+            } else {
+                isAdmin = false;
+                setLoginMessage("Identifiants incorrects. Veuillez vérifier l'identifiant et/ou le mot de passe.", true);
+            }
+        }
+
+        function handleLogout() {
+            isAdmin = false;
+            document.getElementById('nav-admin-link').classList.add('hidden');
+            document.getElementById('admin-indicator').classList.add('hidden');
+            document.getElementById('auth-status').innerHTML = '<button onclick="navigateTo(\'login\'); toggleSidebar()" class="text-sm underline text-brand-500 hover:text-brand-900">Se connecter</button>';
+            
+            // Clear form fields
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            
+            showToast("Déconnexion réussie.", "default");
+            navigateTo('home');
+        }
+
+        function handleAddProduct(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('prod-name').value;
+            const price = parseFloat(document.getElementById('prod-price').value);
+            const image = document.getElementById('prod-image').value;
+            const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+
+            // Add to Data
+            products.unshift({ id: newId, name, price, category: 'Nouveau', image }); // Add to top
+            
+            // Render
+            renderProducts();
+            renderAdminTable();
+            
+            showToast(`Produit "${name}" ajouté à la boutique !`, "success");
+            
+            // Reset form
+            e.target.reset();
+        }
+
+        // --- PRODUCT RENDERING (SHOP) ---
+        
+        function renderProducts() {
+            const grid = document.getElementById('products-grid');
+            grid.innerHTML = products.map(product => `
+                <div class="group animate-[fadeIn_0.5s_ease-out]">
+                     <div class="relative overflow-hidden rounded-xl bg-brand-200 aspect-square mb-3">
+                        <img src="${product.image}" onerror="this.onerror=null; this.src='https://placehold.co/400x400/efece6/4a453e?text=${product.name.replace(/\s/g, '+')}'" alt="${product.name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <button onclick="addToCart('${product.name}', ${product.price})" class="absolute bottom-4 right-4 bg-white p-3 rounded-full shadow-lg opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all hover:bg-brand-accent hover:text-white">
+                            <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+                        </button>
+                     </div>
+                     <h3 class="font-serif text-lg">${product.name}</h3>
+                     <p class="text-brand-900 font-medium">${product.price}€</p>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+
+        // --- ADMIN TABLE LOGIC ---
+
+        function renderAdminTable() {
+            const tableBody = document.getElementById('admin-products-table');
+            const productListHTML = products.map(product => `
+                <tr id="product-row-${product.id}" class="hover:bg-brand-50 transition-colors">
+                    <td class="px-4 py-4 whitespace-nowrap">
+                        <img src="${product.image}" onerror="this.onerror=null; this.src='https://placehold.co/60x60/efece6/4a453e?text=Tapis'" class="w-16 h-16 object-cover rounded-lg border border-brand-100">
+                    </td>
+                    <td class="px-4 py-4">
+                        <span id="name-display-${product.id}" class="text-brand-900 font-medium">${product.name}</span>
+                        <input id="name-input-${product.id}" type="text" value="${product.name}" class="product-editable-input hidden">
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap">
+                        <span id="price-display-${product.id}" class="text-brand-800">${product.price}€</span>
+                        <input id="price-input-${product.id}" type="number" value="${product.price}" class="product-editable-input hidden w-20">
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                        <div class="flex space-x-2">
+                            <button id="edit-btn-${product.id}" onclick="editProduct(${product.id})" class="text-brand-accent hover:text-brand-900 transition-colors p-1 rounded-full hover:bg-brand-100">
+                                <i data-lucide="edit-3" class="w-5 h-5"></i>
+                            </button>
+                            <button id="save-btn-${product.id}" onclick="saveProduct(${product.id})" class="text-brand-success hover:text-brand-900 transition-colors p-1 rounded-full hover:bg-brand-100 hidden">
+                                <i data-lucide="save" class="w-5 h-5"></i>
+                            </button>
+                            <button onclick="deleteProduct(${product.id})" class="text-brand-danger hover:text-brand-900 transition-colors p-1 rounded-full hover:bg-brand-100">
+                                <i data-lucide="trash-2" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+            tableBody.innerHTML = productListHTML;
+            lucide.createIcons();
+        }
+
+        function editProduct(id) {
+            // Hide display spans, show input fields
+            document.getElementById(`name-display-${id}`).classList.add('hidden');
+            document.getElementById(`price-display-${id}`).classList.add('hidden');
+            document.getElementById(`name-input-${id}`).classList.remove('hidden');
+            document.getElementById(`price-input-${id}`).classList.remove('hidden');
+
+            // Toggle buttons
+            document.getElementById(`edit-btn-${id}`).classList.add('hidden');
+            document.getElementById(`save-btn-${id}`).classList.remove('hidden');
+        }
+
+        function saveProduct(id) {
+            const newName = document.getElementById(`name-input-${id}`).value;
+            const newPrice = parseFloat(document.getElementById(`price-input-${id}`).value);
+
+            if (!newName || isNaN(newPrice) || newPrice <= 0) {
+                showToast("Veuillez entrer un nom et un prix valides.", "error");
+                return;
+            }
+
+            // Find and update in the products array
+            const productIndex = products.findIndex(p => p.id === id);
+            if (productIndex !== -1) {
+                products[productIndex].name = newName;
+                products[productIndex].price = newPrice;
+            }
+
+            // Update display spans immediately
+            document.getElementById(`name-display-${id}`).innerText = newName;
+            document.getElementById(`price-display-${id}`).innerText = newPrice + '€';
+
+            // Hide input fields, show display spans
+            document.getElementById(`name-display-${id}`).classList.remove('hidden');
+            document.getElementById(`price-display-${id}`).classList.remove('hidden');
+            document.getElementById(`name-input-${id}`).classList.add('hidden');
+            document.getElementById(`price-input-${id}`).classList.add('hidden');
+
+            // Toggle buttons
+            document.getElementById(`edit-btn-${id}`).classList.remove('hidden');
+            document.getElementById(`save-btn-${id}`).classList.add('hidden');
+
+            // Re-render shop view (in case names/prices changed)
+            renderProducts();
+            showToast(`Produit ${id} mis à jour.`, "success");
+        }
+
+        function deleteProduct(id) {
+            // Remove from the products array
+            products = products.filter(p => p.id !== id);
+            
+            // Re-render both views
+            renderProducts();
+            renderAdminTable(); 
+
+            // Update cart in case deleted item was there (simple version)
+            cart = cart.filter(item => item.id !== id);
+            updateCartUI();
+            
+            showToast(`Produit supprimé du catalogue.`, "error");
+        }
+        
+        // --- CART LOGIC ---
+
+        function toggleCart() {
+            const panel = document.getElementById('cart-panel');
+            const overlay = document.getElementById('cart-overlay');
+            const isOpen = !panel.classList.contains('translate-x-full');
+
+            if (isOpen) {
+                panel.classList.add('translate-x-full');
+                overlay.classList.remove('opacity-100');
+                overlay.classList.add('opacity-0');
+                setTimeout(() => overlay.classList.add('hidden'), 500);
+            } else {
+                overlay.classList.remove('hidden');
+                void overlay.offsetWidth;
+                overlay.classList.remove('opacity-0');
+                overlay.classList.add('opacity-100');
+                panel.classList.remove('translate-x-full');
+            }
+        }
+
+        function addToCart(name, price) {
+            // Simple cart: add item without quantity tracking
+            cart.push({ name, price, id: products.find(p => p.name === name).id });
+            updateCartUI();
+            showToast(`"${name}" ajouté au panier`);
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const container = document.getElementById('cart-items');
+            const countBadge = document.getElementById('cart-count');
+            const totalEl = document.getElementById('cart-total');
+
+            countBadge.innerText = cart.length;
+            if (cart.length > 0) {
+                 countBadge.classList.remove('opacity-0');
+                 countBadge.classList.add('opacity-100');
+            } else {
+                 countBadge.classList.remove('opacity-100');
+                 countBadge.classList.add('opacity-0');
+            }
+
+            const total = cart.reduce((acc, item) => acc + item.price, 0);
+            totalEl.innerText = total.toFixed(2) + '€';
+
+            if (cart.length === 0) {
+                container.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center text-brand-400">
+                        <i data-lucide="shopping-basket" class="w-16 h-16 mb-4 opacity-50"></i>
+                        <p>Votre panier est vide</p>
+                        <button onclick="toggleCart(); navigateTo('shop')" class="mt-4 text-brand-accent underline hover:text-brand-900">Explorer la boutique</button>
+                    </div>`;
+            } else {
+                container.innerHTML = cart.map((item, index) => {
+                    const product = products.find(p => p.id === item.id) || {};
+                    const imageUrl = product.image || 'https://placehold.co/200x200/efece6/4a453e?text=Tapis';
+                    return `
+                    <div class="flex items-center gap-4 bg-white p-3 rounded-lg border border-brand-100 shadow-sm animate-[fadeIn_0.3s_ease-out]">
+                        <div class="w-16 h-16 bg-brand-200 rounded-md overflow-hidden flex-shrink-0">
+                            <img src="${imageUrl}" onerror="this.onerror=null; this.src='https://placehold.co/200x200/efece6/4a453e?text=Tapis'" class="w-full h-full object-cover opacity-80">
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-serif font-medium text-brand-900">${item.name}</h4>
+                            <p class="text-sm text-brand-500">Taille Unique</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="block font-bold text-brand-900">${item.price}€</span>
+                            <button onclick="removeFromCart(${index})" class="text-xs text-red-400 underline mt-1">Retirer</button>
+                        </div>
+                    </div>
+                `}).join('');
+                lucide.createIcons();
+            }
+        }
+
+
+        // Initialize Shop and Admin Table on Load
+        window.onload = function() {
+            renderProducts();
+            renderAdminTable();
+        }
+
+    </script>
+</body>
+</html>
